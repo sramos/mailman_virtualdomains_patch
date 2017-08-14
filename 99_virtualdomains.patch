@@ -1,17 +1,21 @@
---- a/Mailman/Gui/General.py
-+++ b/Mailman/Gui/General.py
-@@ -450,7 +450,7 @@
+Index: mailman-2.1.18/Mailman/Gui/General.py
+===================================================================
+--- mailman-2.1.18.orig/Mailman/Gui/General.py
++++ mailman-2.1.18/Mailman/Gui/General.py
+@@ -516,7 +516,7 @@ class General(GUIBase):
  
      def _setValue(self, mlist, property, val, doc):
          if property == 'real_name' and \
 -               val.lower() <> mlist.internal_name().lower():
-+               val.lower() <> mlist.real_name.lower():
++               val.lower() <> mlist.real_name().lower():
              # These values can't differ by other than case
              doc.addError(_("""<b>real_name</b> attribute not
              changed!  It must differ from the list's name by case
---- a/Mailman/Handlers/CookHeaders.py
-+++ b/Mailman/Handlers/CookHeaders.py
-@@ -180,7 +180,9 @@
+Index: mailman-2.1.18/Mailman/Handlers/CookHeaders.py
+===================================================================
+--- mailman-2.1.18.orig/Mailman/Handlers/CookHeaders.py
++++ mailman-2.1.18/Mailman/Handlers/CookHeaders.py
+@@ -231,7 +231,9 @@ def process(mlist, msg, msgdata):
      if msgdata.get('_nolist') or not mlist.include_rfc2369_headers:
          return
      # This will act like an email address for purposes of formataddr()
@@ -22,9 +26,11 @@
      cset = Utils.GetCharSet(mlist.preferred_language)
      if mlist.description:
          # Don't wrap the header since here we just want to get it properly RFC
---- a/Mailman/MTA/Postfix.py
-+++ b/Mailman/MTA/Postfix.py
-@@ -29,6 +29,7 @@
+Index: mailman-2.1.18/Mailman/MTA/Postfix.py
+===================================================================
+--- mailman-2.1.18.orig/Mailman/MTA/Postfix.py
++++ mailman-2.1.18/Mailman/MTA/Postfix.py
+@@ -29,6 +29,7 @@ from Mailman import Utils
  from Mailman import LockFile
  from Mailman.i18n import _
  from Mailman.MTA.Utils import makealiases
@@ -32,7 +38,7 @@
  from Mailman.Logging.Syslog import syslog
  
  LOCKFILE = os.path.join(mm_cfg.LOCK_DIR, 'creator')
-@@ -146,12 +147,14 @@
+@@ -150,12 +151,14 @@ def _addvirtual(mlist, fp):
      print >> fp, '# STANZA START:', listname
      print >> fp, '# CREATED:', time.ctime(time.time())
      # Now add all the standard alias entries
@@ -51,9 +57,11 @@
          # Format the text file nicely
          print >> fp, fqdnaddr, ((fieldsz - len(k)) * ' '), localaddr
      # Finish the text file stanza
---- a/Mailman/MTA/Utils.py
-+++ b/Mailman/MTA/Utils.py
-@@ -76,6 +76,15 @@
+Index: mailman-2.1.18/Mailman/MTA/Utils.py
+===================================================================
+--- mailman-2.1.18.orig/Mailman/MTA/Utils.py
++++ mailman-2.1.18/Mailman/MTA/Utils.py
+@@ -76,6 +76,15 @@ def _makealiases_maildir(listname):
          aliases.append(('%s-%s' % (listname, ext), maildir))
      return aliases
  
@@ -69,9 +77,11 @@
  
  
  if mm_cfg.USE_MAILDIR:
---- a/Mailman/MailList.py
-+++ b/Mailman/MailList.py
-@@ -185,9 +185,14 @@
+Index: mailman-2.1.18/Mailman/MailList.py
+===================================================================
+--- mailman-2.1.18.orig/Mailman/MailList.py
++++ mailman-2.1.18/Mailman/MailList.py
+@@ -185,9 +185,14 @@ class MailList(HTMLFormatter, Deliverer,
          return self._full_path
  
      def getListAddress(self, extra=None):
@@ -88,7 +98,7 @@
  
      # For backwards compatibility
      def GetBouncesEmail(self):
-@@ -476,8 +481,8 @@
+@@ -481,8 +486,8 @@ class MailList(HTMLFormatter, Deliverer,
      def Create(self, name, admin, crypted_password,
                 langs=None, emailhost=None, urlhost=None):
          assert name == name.lower(), 'List name must be all lower case.'
@@ -99,7 +109,7 @@
          # Problems and potential attacks can occur if the list name in the
          # pipe to the wrapper in an MTA alias or other delivery process
          # contains shell special characters so allow only defined characters
-@@ -491,19 +496,33 @@
+@@ -496,19 +501,33 @@ class MailList(HTMLFormatter, Deliverer,
          # the admin's email address, so transform the exception.
          if emailhost is None:
              emailhost = mm_cfg.DEFAULT_EMAIL_HOST
@@ -134,7 +144,7 @@
          if langs is None:
              self.available_languages = [self.preferred_language]
          else:
-@@ -1365,7 +1384,8 @@
+@@ -1371,7 +1390,8 @@ class MailList(HTMLFormatter, Deliverer,
          addresses in the recipient headers.
          """
          # This is the list's full address.
@@ -144,7 +154,7 @@
          recips = []
          # Check all recipient addresses against the list's explicit addresses,
          # specifically To: Cc: and Resent-to:
-@@ -1380,7 +1400,8 @@
+@@ -1386,7 +1406,8 @@ class MailList(HTMLFormatter, Deliverer,
              addr = addr.lower()
              localpart = addr.split('@')[0]
              if (# TBD: backwards compatibility: deprecated
@@ -154,9 +164,11 @@
                      # exact match against the complete list address
                      addr == listfullname):
                  return True
---- a/bin/newlist
-+++ b/bin/newlist
-@@ -164,7 +164,8 @@
+Index: mailman-2.1.18/bin/newlist
+===================================================================
+--- mailman-2.1.18.orig/bin/newlist
++++ mailman-2.1.18/bin/newlist
+@@ -157,7 +157,8 @@ def main():
  
      if '@' in listname:
          # note that --urlhost and --emailhost have precedence
